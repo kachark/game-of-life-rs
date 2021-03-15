@@ -1,6 +1,6 @@
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum CellState {
     Alive,
     Dead
@@ -14,6 +14,13 @@ pub struct Cell {
 }
 
 impl Cell {
+
+    pub fn new(state: CellState, pos: (usize, usize)) -> Self {
+        Self {
+            state,
+            pos
+        }
+    }
 
     pub fn get_state(&self) -> &CellState {
         &self.state

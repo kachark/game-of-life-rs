@@ -1,6 +1,8 @@
 
 use std::fmt;
 
+use cell::Cell;
+
 use crate::cell;
 
 
@@ -31,7 +33,7 @@ pub enum PositionDescription {
 #[derive(Clone)]
 pub struct Grid {
     pub size: (usize, usize),
-    pub grid: Vec< Vec< Option<cell::Cell> > >
+    pub grid: Vec< Vec< cell::Cell> >
 }
 
 impl Grid {
@@ -44,9 +46,18 @@ impl Grid {
         assert_eq!(size.0, size.1, "Grid dimensions do not match.");
 
         // row of optional Cells of length size[0]. Initialized to None.
-        let row: Vec<Option<cell::Cell>> = vec![None; size.0];
+        // let row: Vec<cell::Cell> = vec![None; size.0]; // TODO grid has only two states, alive / dead
         // populate grid with size[1] rows
-        let grid = vec![row; size.1];
+        // let grid = vec![row; size.1];
+
+        let mut grid: Vec<Vec<cell::Cell>> = vec![Vec::new(); size.1];
+        for j in 0..size.1 {
+            let mut row: Vec<cell::Cell> = vec![cell::Cell::new(cell::CellState::Dead, (0,0)); size.0];
+            for i in 0..size.0 {
+                row[i].pos = (i,j);
+            }
+            grid[j] = row;
+        }
 
         Self {
             size,
@@ -62,12 +73,12 @@ impl Grid {
 
             let mut row_char = vec!['-'; self.size.0];
 
-            for (j, col) in row.iter().enumerate() {
+            for (i, col) in row.iter().enumerate() {
 
                 // If option resolves to a Cell, display an "x"
-                match col {
-                    Some(_) => row_char[j] = 'x',
-                    None => continue
+                match col.get_state() {
+                    cell::CellState::Alive => row_char[i] = 'x',
+                    cell::CellState::Dead => continue
                 }
 
             }
@@ -83,8 +94,18 @@ impl Grid {
     pub fn seed(&mut self, seeds: Vec<cell::Cell>) {
 
         for cell in seeds {
-            let position = *cell.get_position();
-            self.grid[position.0][position.1] = Some(cell);
+            let position = cell.get_position();
+            self.grid[position.0][position.1].state = cell::CellState::Alive;
+        }
+
+    }
+
+    pub fn update(&mut self, updated_cells: Vec<cell::Cell>) {
+
+        for cell in updated_cells {
+            let position = cell.get_position();
+            let state = cell.get_state();
+            self.grid[position.0][position.1].state = *state;
         }
 
     }
@@ -93,7 +114,7 @@ impl Grid {
         &self.size
     }
 
-    pub fn get_neighbors(&self, cell: cell::Cell) -> Vec<&cell::Cell> {
+    pub fn get_neighbors(&self, cell: &cell::Cell) -> Vec<&cell::Cell> {
 
         // For a given Cell, check all neighboring directions
 
@@ -106,59 +127,43 @@ impl Grid {
         for direction in search.iter() {
             match direction {
                 GridDirection::Up{x, y} => {
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::Down{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::Left{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::Right{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::UpLeft{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::UpRight{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::DownLeft{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 },
                 GridDirection::DownRight{x, y} => {
 
-                    let search_result = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    if let Some(cell) = search_result {
-                        neighbors.push(cell);
-                    }
+                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
+                    neighbors.push(cell);
                 }
             }
         }

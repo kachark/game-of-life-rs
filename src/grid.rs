@@ -1,11 +1,13 @@
 
 use std::fmt;
+use std::collections::HashMap;
 
 use cell::Cell;
 
 use crate::cell;
 
 
+#[derive(Debug)]
 pub enum GridDirection {
     Up { x: usize, y: usize },
     Down { x: usize, y: usize },
@@ -17,6 +19,7 @@ pub enum GridDirection {
     DownRight { x: usize, y: usize }
 }
 
+#[derive(Debug)]
 pub enum PositionDescription {
     Center,
     TopBound,
@@ -33,7 +36,7 @@ pub enum PositionDescription {
 #[derive(Clone)]
 pub struct Grid {
     pub size: (usize, usize),
-    pub grid: Vec< Vec< cell::Cell> >
+    pub cells: HashMap<(usize, usize), cell::Cell>
 }
 
 impl Grid {
@@ -45,23 +48,21 @@ impl Grid {
 
         assert_eq!(size.0, size.1, "Grid dimensions do not match.");
 
-        // row of optional Cells of length size[0]. Initialized to None.
-        // let row: Vec<cell::Cell> = vec![None; size.0]; // TODO grid has only two states, alive / dead
-        // populate grid with size[1] rows
-        // let grid = vec![row; size.1];
+        let mut cells = HashMap::<(usize, usize), cell::Cell>::new();
 
-        let mut grid: Vec<Vec<cell::Cell>> = vec![Vec::new(); size.1];
-        for j in 0..size.1 {
-            let mut row: Vec<cell::Cell> = vec![cell::Cell::new(cell::CellState::Dead, (0,0)); size.0];
-            for i in 0..size.0 {
-                row[i].pos = (i,j);
+        for i in 0..size.0 {
+
+            for j in 0..size.1 {
+
+                let cell = cell::Cell::new(cell::CellState::Dead, (i,j));
+                cells.entry( (i,j) ).or_insert(cell);
+
             }
-            grid[j] = row;
         }
 
         Self {
             size,
-            grid
+            cells
         }
 
     }
@@ -69,43 +70,51 @@ impl Grid {
     // instance methods
     pub fn display(&self) {
 
-        for row in self.grid.iter() {
+        // since printing is done line by line, index by y axis
+        for j in 0..self.size.1 {
 
-            let mut row_char = vec!['-'; self.size.0];
+            let mut x_chars = vec!['-'; self.size.0];
 
-            for (i, col) in row.iter().enumerate() {
+            for i in 0..self.size.0 {
 
-                // If option resolves to a Cell, display an "x"
-                match col.get_state() {
-                    cell::CellState::Alive => row_char[i] = 'x',
-                    cell::CellState::Dead => continue
+                // safely unwrap optional retrieved from hashmap
+                if let Some(cell) = self.cells.get(&(i,j)) {
+
+                    match cell.get_state() {
+                        cell::CellState::Alive => x_chars[i] = 'x',
+                        cell::CellState::Dead => continue
+                    }
+
                 }
 
             }
 
-            let row_string: String = row_char.into_iter().collect();
+            let row_string: String = x_chars.into_iter().collect();
             println!("{:?}", row_string);
 
         }
 
     }
 
-
     pub fn seed(&mut self, seeds: Vec<cell::Cell>) {
 
-        for cell in seeds {
-            let position = cell.get_position();
-            self.grid[position.0][position.1].state = cell::CellState::Alive;
+        for seed_cell in seeds {
+            let position = seed_cell.get_position();
+
+            if let Some(cell) = self.cells.get_mut(position) {
+                cell.state = seed_cell.state;
+            }
+
         }
 
     }
 
-    pub fn update(&mut self, updated_cells: Vec<cell::Cell>) {
+    pub fn update(&mut self, updated_cells: HashMap<(usize, usize), cell::CellState>) {
 
-        for cell in updated_cells {
-            let position = cell.get_position();
-            let state = cell.get_state();
-            self.grid[position.0][position.1].state = *state;
+        for (position, state) in updated_cells.iter() {
+            if let Some(cell) = self.cells.get_mut(position) {
+                cell.state = *state;
+            }
         }
 
     }
@@ -114,12 +123,9 @@ impl Grid {
         &self.size
     }
 
-    pub fn get_neighbors(&self, cell: &cell::Cell) -> Vec<&cell::Cell> {
+    pub fn get_neighbors(&self, position: &(usize, usize)) -> Vec<(usize, usize)> {
 
-        // For a given Cell, check all neighboring directions
-
-        let position = cell.get_position();
-        let mut neighbors: Vec<&cell::Cell> = Vec::new();
+        let mut neighbors: Vec<(usize, usize)> = Vec::new();
 
         // apply the search policy
         let search = self.search_policy(position);
@@ -127,43 +133,28 @@ impl Grid {
         for direction in search.iter() {
             match direction {
                 GridDirection::Up{x, y} => {
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::Down{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::Left{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::Right{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::UpLeft{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::UpRight{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::DownLeft{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 },
                 GridDirection::DownRight{x, y} => {
-
-                    let cell = &self.grid[*x][*y]; // to index need to dereference to the owned type, not a ref
-                    neighbors.push(cell);
+                    neighbors.push((*x, *y)); // since search will go out of scope, dereference
                 }
             }
         }
@@ -176,19 +167,19 @@ impl Grid {
 
         let description: PositionDescription;
 
-        if position.0 == 0 && position.1 < self.size.1 && position.1 > 0 {
+        if position.0 == 0 && position.1 < (self.size.1-1) && position.1 > 0 {
 
             description = PositionDescription::LeftBound;
 
-        } else if position.0 == self.size.0 && position.1 < self.size.1 && position.1 > 0 {
+        } else if position.0 == (self.size.0-1) && position.1 < (self.size.1-1) && position.1 > 0 {
 
             description = PositionDescription::RightBound;
 
-        } else if position.1 == 0 && position.0 < self.size.0 && position.0 > 0 {
+        } else if position.1 == 0 && position.0 < (self.size.0-1) && position.0 > 0 {
 
             description = PositionDescription::BottomBound;
 
-        } else if position.1 == self.size.1 && position.0 < self.size.0 && position.0 > 0 {
+        } else if position.1 == (self.size.1-1) && position.0 < (self.size.0-1) && position.0 > 0 {
 
             description = PositionDescription::TopBound;
 
@@ -196,15 +187,15 @@ impl Grid {
 
             description = PositionDescription::BottomLeftCorner;
 
-        } else if position.0 == 0 && position.1 == self.size.1 {
+        } else if position.0 == 0 && position.1 == (self.size.1-1) {
 
             description = PositionDescription::TopLeftCorner;
 
-        } else if position.0 == self.size.0 && position.1 == self.size.1 {
+        } else if position.0 == (self.size.0-1) && position.1 == (self.size.1-1) {
 
             description = PositionDescription::TopRightCorner;
 
-        } else if position.0 == 0 && position.1 == self.size.1 {
+        } else if position.1 == 0 && position.0 == (self.size.1-1) {
 
             description = PositionDescription::BottomRightCorner;
 
@@ -222,7 +213,10 @@ impl Grid {
     pub fn search_policy(&self, position: &(usize, usize)) -> Vec<GridDirection> {
 
         let search: Vec<GridDirection>;
-        let dimensions = self.get_dimensions();
+        let mut dimensions = *self.get_dimensions();
+        // dimensions copies the result from get_dimensions()
+        dimensions.0 -= 1;
+        dimensions.1 -= 1;
 
         match self.get_position_description(position) {
             PositionDescription::Center => {
@@ -230,7 +224,7 @@ impl Grid {
                     GridDirection::Up{ x: position.0, y: position.1 + 1 },
                     GridDirection::Down{ x: position.0, y: position.1 - 1 },
                     GridDirection::Left{ x: position.0 - 1, y: position.1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
+                    GridDirection::Right{ x: position.0 + 1, y: position.1 },
                     GridDirection::UpLeft{ x: position.0 - 1, y: position.1 + 1 },
                     GridDirection::UpRight{ x: position.0 + 1, y: position.1 + 1 },
                     GridDirection::DownLeft{ x: position.0 - 1, y: position.1 - 1 },
@@ -241,7 +235,7 @@ impl Grid {
                 search = vec![
                     GridDirection::Down{ x: position.0, y: position.1 - 1 },
                     GridDirection::Left{ x: position.0 - 1, y: position.1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
+                    GridDirection::Right{ x: position.0 + 1, y: position.1 },
                     GridDirection::DownLeft{ x: position.0 - 1, y: position.1 - 1 },
                     GridDirection::DownRight{ x: position.0 + 1, y: position.1 - 1 },
 
@@ -256,7 +250,7 @@ impl Grid {
                 search = vec![
                     GridDirection::Up{ x: position.0, y: position.1 + 1 },
                     GridDirection::Left{ x: position.0 - 1, y: position.1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
+                    GridDirection::Right{ x: position.0 + 1, y: position.1 },
                     GridDirection::UpLeft{ x: position.0 - 1, y: position.1 + 1 },
                     GridDirection::UpRight{ x: position.0 + 1, y: position.1 + 1 },
 
@@ -272,7 +266,7 @@ impl Grid {
                 search = vec![
                     GridDirection::Up{ x: position.0, y: position.1 + 1 },
                     GridDirection::Down{ x: position.0, y: position.1 - 1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
+                    GridDirection::Right{ x: position.0 + 1, y: position.1 },
                     GridDirection::UpRight{ x: position.0 + 1, y: position.1 + 1 },
                     GridDirection::DownRight{ x: position.0 + 1, y: position.1 -1 },
 
@@ -293,7 +287,7 @@ impl Grid {
                     GridDirection::DownLeft{ x: position.0 - 1, y: position.1 - 1 },
 
                     // wrap around
-                    GridDirection::Right{ x: 0, y: position.0 },
+                    GridDirection::Right{ x: 0, y: position.1 },
                     GridDirection::UpRight{ x: 0, y: position.1 + 1 },
                     GridDirection::DownRight{ x: 0, y: position.1 -1 },
                 ];
@@ -307,17 +301,17 @@ impl Grid {
 
                     // wrap around
                     GridDirection::Up{ x: position.0, y: 0 },
-                    GridDirection::Down{ x: position.0, y: position.1 - 1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
-                    GridDirection::UpRight{ x: position.0 + 1, y: position.1 + 1 },
-                    GridDirection::DownRight{ x: position.0 + 1, y: position.1 -1 },
+                    GridDirection::UpLeft{ x: position.0 - 1, y: 0 },
+                    GridDirection::UpRight{ x: 0, y: 0 },
+                    GridDirection::Right{ x: 0, y: position.1 },
+                    GridDirection::DownRight{ x: 0, y: position.1 - 1 },
                 ];
 
             },
             PositionDescription::TopLeftCorner => {
                 search = vec![
                     GridDirection::Down{ x: position.0, y: position.1 - 1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
+                    GridDirection::Right{ x: position.0 + 1, y: position.1 },
                     GridDirection::DownRight{ x: position.0 + 1, y: position.1 -1 },
 
                     // wrap around
@@ -337,7 +331,7 @@ impl Grid {
 
                     // wrap around
                     GridDirection::Down{ x: position.0, y: dimensions.1 },
-                    GridDirection::Right{ x: 0, y: position.0 },
+                    GridDirection::Right{ x: 0, y: position.1 },
                     GridDirection::UpRight{ x: 0, y: position.1 + 1 },
                     GridDirection::DownLeft{ x: position.0 - 1, y: dimensions.1 },
                     GridDirection::DownRight{ x: 0, y: dimensions.1 }
@@ -348,7 +342,7 @@ impl Grid {
             PositionDescription::BottomLeftCorner => {
                 search = vec![
                     GridDirection::Up{ x: position.0, y: position.1 + 1 },
-                    GridDirection::Right{ x: position.0 + 1, y: position.0 },
+                    GridDirection::Right{ x: position.0 + 1, y: position.1 },
                     GridDirection::UpRight{ x: position.0 + 1, y: position.1 + 1 },
 
                     // wrap around

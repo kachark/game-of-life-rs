@@ -46,7 +46,7 @@ impl Grid {
 
         // TODO return Result for better error handling
 
-        assert_eq!(size.0, size.1, "Grid dimensions do not match.");
+        // assert_eq!(size.0, size.1, "Grid dimensions do not match.");
 
         let mut cells = HashMap::<(usize, usize), cell::Cell>::new();
 
@@ -175,11 +175,11 @@ impl Grid {
 
             description = PositionDescription::RightBound;
 
-        } else if position.1 == 0 && position.0 < (self.size.0-1) && position.0 > 0 {
+        } else if position.0 < (self.size.0-1) && position.0 > 0 && position.1 == 0 {
 
             description = PositionDescription::BottomBound;
 
-        } else if position.1 == (self.size.1-1) && position.0 < (self.size.0-1) && position.0 > 0 {
+        } else if position.0 < (self.size.0-1) && position.0 > 0 && position.1 == (self.size.1-1) {
 
             description = PositionDescription::TopBound;
 
@@ -195,12 +195,13 @@ impl Grid {
 
             description = PositionDescription::TopRightCorner;
 
-        } else if position.1 == 0 && position.0 == (self.size.1-1) {
+        } else if position.0 == (self.size.0-1) && position.1 == 0 {
 
             description = PositionDescription::BottomRightCorner;
 
         } else {
 
+            // TODO placeholder
             description = PositionDescription::Center;
 
         }

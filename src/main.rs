@@ -8,7 +8,7 @@ fn main() {
     println!("Hello, world!");
 
     let grid_x: usize = 10;
-    let grid_y: usize = 10;
+    let grid_y: usize = 20;
     let mut grid1 = grid::Grid::new((grid_x, grid_y));
 
     let seed = vec![

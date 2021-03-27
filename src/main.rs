@@ -25,15 +25,15 @@ fn main() {
 
         let mut delta: HashMap<(usize, usize), cell::CellState> = HashMap::new();
 
-        for i in 0..grid1.size.0 {
-            for j in 0..grid1.size.1 {
+        for i in 0..grid1.get_dimensions().0 {
+            for j in 0..grid1.get_dimensions().1 {
 
                 let neighbors = grid1.get_neighbors(&(i,j)).unwrap();
 
                 let mut alive = 0;
                 for indices in neighbors {
 
-                    if let Some(neighbor_cell) = grid1.cells.get(&indices) {
+                    if let Some(neighbor_cell) = grid1.get_cell(&indices) {
 
                         match neighbor_cell.get_state() {
                             cell::CellState::Alive => {
@@ -52,7 +52,7 @@ fn main() {
                 // fewer than 2 live neighbors
                 if alive < 2 {
 
-                    if let Some(cell) = grid1.cells.get(&(i,j)) {
+                    if let Some(cell) = grid1.get_cell(&(i,j)) {
 
                         // why isn't it coming here for 6,6?
                         match cell.get_state() {
@@ -66,7 +66,7 @@ fn main() {
 
                 } else if alive == 2 || alive == 3 { // 2 or 3 live neighbors
 
-                    if let Some(cell) = grid1.cells.get(&(i,j)) {
+                    if let Some(cell) = grid1.get_cell(&(i,j)) {
 
                         match cell.get_state() {
                             cell::CellState::Alive => continue,
@@ -83,7 +83,7 @@ fn main() {
 
                 } else if alive > 3 { // greater than 3 live neighbors
 
-                    if let Some(cell) = grid1.cells.get(&(i,j)) {
+                    if let Some(cell) = grid1.get_cell(&(i,j)) {
 
                         match cell.get_state() {
                             cell::CellState::Alive => {

@@ -2,7 +2,6 @@
 use std::fmt;
 use std::collections::HashMap;
 
-use cell::Cell;
 use crate::cell;
 
 #[derive(Debug, Clone)]
@@ -26,6 +25,7 @@ pub enum GridDirection {
     DownRight { x: usize, y: usize }
 }
 
+// TODO replace this
 #[derive(Debug)]
 pub enum PositionDescription {
     Center,
@@ -42,8 +42,8 @@ pub enum PositionDescription {
 
 #[derive(Clone)]
 pub struct Grid {
-    pub size: (usize, usize),
-    pub cells: HashMap<(usize, usize), cell::Cell>
+    size: (usize, usize),
+    state: HashMap<(usize, usize), cell::Cell>
 }
 
 impl Grid {
@@ -51,21 +51,21 @@ impl Grid {
     // static method
     pub fn new(size: (usize, usize)) -> Self {
 
-        let mut cells = HashMap::<(usize, usize), cell::Cell>::new();
+        let mut state = HashMap::<(usize, usize), cell::Cell>::new();
 
         for i in 0..size.0 {
 
             for j in 0..size.1 {
 
                 let cell = cell::Cell::new(cell::CellState::Dead, (i,j));
-                cells.entry( (i,j) ).or_insert(cell);
+                state.entry( (i,j) ).or_insert(cell);
 
             }
         }
 
         Self {
             size,
-            cells
+            state
         }
 
     }
@@ -81,7 +81,7 @@ impl Grid {
             for i in 0..self.size.0 {
 
                 // safely unwrap optional retrieved from hashmap
-                if let Some(cell) = self.cells.get(&(i,j)) {
+                if let Some(cell) = self.state.get(&(i,j)) {
 
                     match cell.get_state() {
                         cell::CellState::Alive => x_chars[i] = 'x',
@@ -101,9 +101,9 @@ impl Grid {
 
     pub fn update(&mut self, updated_cells: HashMap<(usize, usize), cell::CellState>) {
 
-        for (position, state) in updated_cells.iter() {
-            if let Some(cell) = self.cells.get_mut(position) {
-                cell.state = *state;
+        for (position, new_state) in updated_cells.iter() {
+            if let Some(cell) = self.state.get_mut(position) {
+                cell.state = *new_state;
             }
         }
 
@@ -111,6 +111,10 @@ impl Grid {
 
     pub fn get_dimensions(&self) -> &(usize, usize) {
         &self.size
+    }
+
+    pub fn get_cell(&self, position: &(usize, usize)) -> Option<&cell::Cell> {
+        self.state.get(position)
     }
 
     pub fn get_neighbors(&self, position: &(usize, usize)) -> Result<Vec<(usize, usize)>, OutOfBoundsError> {

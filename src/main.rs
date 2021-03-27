@@ -11,25 +11,24 @@ fn main() {
     let grid_y: usize = 20;
     let mut grid1 = grid::Grid::new((grid_x, grid_y));
 
-    let seed = vec![
-        cell::Cell::new(cell::CellState::Alive, (3,3)),
-        cell::Cell::new(cell::CellState::Alive, (3,2)),
-        cell::Cell::new(cell::CellState::Alive, (3,1)),
-        cell::Cell::new(cell::CellState::Alive, (2,3)),
-        cell::Cell::new(cell::CellState::Alive, (1,2))
-    ];
+    let mut seed: HashMap<(usize,usize), cell::CellState> = HashMap::new();
+    seed.entry((3,3)).or_insert(cell::CellState::Alive);
+    seed.entry((3,2)).or_insert(cell::CellState::Alive);
+    seed.entry((3,1)).or_insert(cell::CellState::Alive);
+    seed.entry((2,3)).or_insert(cell::CellState::Alive);
+    seed.entry((1,2)).or_insert(cell::CellState::Alive);
 
-    grid1.seed(seed);
+    grid1.update(seed);
     grid1.display();
 
     for _ in 0..50 {
 
-        let mut delta = HashMap::<(usize, usize), cell::CellState>::new();
+        let mut delta: HashMap<(usize, usize), cell::CellState> = HashMap::new();
 
         for i in 0..grid1.size.0 {
             for j in 0..grid1.size.1 {
 
-                let neighbors = grid1.get_neighbors(&(i,j));
+                let neighbors = grid1.get_neighbors(&(i,j)).unwrap();
 
                 let mut alive = 0;
                 for indices in neighbors {

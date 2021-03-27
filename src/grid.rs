@@ -3,9 +3,16 @@ use std::fmt;
 use std::collections::HashMap;
 
 use cell::Cell;
-
 use crate::cell;
 
+#[derive(Debug, Clone)]
+pub struct OutOfBoundsError;
+
+impl fmt::Display for OutOfBoundsError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Invalid grid position")
+    }
+}
 
 #[derive(Debug)]
 pub enum GridDirection {
@@ -43,10 +50,6 @@ impl Grid {
 
     // static method
     pub fn new(size: (usize, usize)) -> Self {
-
-        // TODO return Result for better error handling
-
-        // assert_eq!(size.0, size.1, "Grid dimensions do not match.");
 
         let mut cells = HashMap::<(usize, usize), cell::Cell>::new();
 
@@ -96,19 +99,6 @@ impl Grid {
 
     }
 
-    pub fn seed(&mut self, seeds: Vec<cell::Cell>) {
-
-        for seed_cell in seeds {
-            let position = seed_cell.get_position();
-
-            if let Some(cell) = self.cells.get_mut(position) {
-                cell.state = seed_cell.state;
-            }
-
-        }
-
-    }
-
     pub fn update(&mut self, updated_cells: HashMap<(usize, usize), cell::CellState>) {
 
         for (position, state) in updated_cells.iter() {
@@ -123,14 +113,14 @@ impl Grid {
         &self.size
     }
 
-    pub fn get_neighbors(&self, position: &(usize, usize)) -> Vec<(usize, usize)> {
+    pub fn get_neighbors(&self, position: &(usize, usize)) -> Result<Vec<(usize, usize)>, OutOfBoundsError> {
 
         let mut neighbors: Vec<(usize, usize)> = Vec::new();
 
         // apply the search policy
         let search = self.search_policy(position);
 
-        for direction in search.iter() {
+        for direction in search?.iter() {
             match direction {
                 GridDirection::Up{x, y} => {
                     neighbors.push((*x, *y)); // since search will go out of scope, dereference
@@ -159,11 +149,11 @@ impl Grid {
             }
         }
 
-        neighbors
+        Ok(neighbors)
 
     }
 
-    pub fn get_position_description(&self, position: &(usize, usize)) -> PositionDescription {
+    pub fn get_position_description(&self, position: &(usize, usize)) -> Result<PositionDescription, OutOfBoundsError> {
 
         let description: PositionDescription;
 
@@ -199,19 +189,23 @@ impl Grid {
 
             description = PositionDescription::BottomRightCorner;
 
+        } else if position.0 > 0 && position.0 < (self.size.0-1) && position.1 > 0 && position.1 <
+            (self.size.1-1) {
+
+            description = PositionDescription::Center;
+
         } else {
 
-            // TODO placeholder
-            description = PositionDescription::Center;
+            return Err(OutOfBoundsError);
 
         }
 
-        description
+        Ok(description)
 
     }
 
 
-    pub fn search_policy(&self, position: &(usize, usize)) -> Vec<GridDirection> {
+    pub fn search_policy(&self, position: &(usize, usize)) -> Result<Vec<GridDirection>, OutOfBoundsError> {
 
         let search: Vec<GridDirection>;
         let mut dimensions = *self.get_dimensions();
@@ -219,7 +213,9 @@ impl Grid {
         dimensions.0 -= 1;
         dimensions.1 -= 1;
 
-        match self.get_position_description(position) {
+        // ? evaluates the Result and expands the Ok()'s or automatically returns the Err()
+        // unwrap evaluates the Result match and automatically raises a panic! for Err()
+        match self.get_position_description(position)? {
             PositionDescription::Center => {
                 search = vec![
                     GridDirection::Up{ x: position.0, y: position.1 + 1 },
@@ -358,7 +354,7 @@ impl Grid {
         }
 
 
-        search
+        Ok(search)
 
     }
 
@@ -375,6 +371,27 @@ impl fmt::Display for Grid {
 
 
 
+
+#[cfg(test)]
+
+#[test]
+fn test_grid_new() {
+
+    let _ = Grid::new((10,10));
+
+}
+
+#[test]
+fn test_grid_update() {
+
+    let mut new_grid = Grid::new((10,10));
+
+    let mut seed: HashMap<(usize,usize), cell::CellState> = HashMap::new();
+    seed.entry((3,3)).or_insert(cell::CellState::Alive);
+
+    new_grid.update(seed);
+
+}
 
 
 

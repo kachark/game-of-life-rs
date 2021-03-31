@@ -3,6 +3,10 @@ use std::fmt;
 use std::collections::HashMap;
 
 use crate::cell;
+use tui::{
+    style::Color,
+    widgets::canvas::{Line, Painter, Shape},
+};
 
 #[derive(Debug, Clone)]
 pub struct OutOfBoundsError;
@@ -43,7 +47,8 @@ pub enum PositionDescription {
 #[derive(Clone)]
 pub struct Grid {
     size: (usize, usize),
-    state: HashMap<(usize, usize), cell::Cell>
+    state: HashMap<(usize, usize), cell::Cell>,
+    color: Color
 }
 
 impl Grid {
@@ -65,7 +70,8 @@ impl Grid {
 
         Self {
             size,
-            state
+            state,
+            color: Color::Cyan
         }
 
     }
@@ -364,13 +370,17 @@ impl Grid {
 
 }
 
-// TODO implement something to pretty print the grid with the cells
-impl fmt::Display for Grid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Shape for Grid {
 
-        write!(f, "Dimensions: ({}, {})", self.size.0, self.size.1)
-
+    fn draw(&self, painter: &mut Painter) {
+        for (position, cell) in self.state.iter() {
+            match cell.get_state() {
+                cell::CellState::Alive => painter.paint(position.0, position.1, self.color),
+                cell::CellState::Dead => continue
+            }
+        }
     }
+
 }
 
 

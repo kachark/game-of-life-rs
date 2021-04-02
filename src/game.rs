@@ -25,8 +25,8 @@ pub fn game_of_life() {
 
         let mut delta: HashMap<(usize, usize), cell::CellState> = HashMap::new();
 
-        for i in 0..grid1.get_dimensions().0 {
-            for j in 0..grid1.get_dimensions().1 {
+        for i in 0..grid1.get_size().0 {
+            for j in 0..grid1.get_size().1 {
 
                 let neighbors = grid1.get_neighbors(&(i,j)).unwrap();
 

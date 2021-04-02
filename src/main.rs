@@ -7,9 +7,8 @@ use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::Altern
 use tui::{
     backend::TermionBackend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::Color,
     widgets::{
-        canvas::{Canvas, Map, MapResolution, Rectangle},
+        canvas::Canvas,
         Block, Borders,
     },
     Terminal,
@@ -25,8 +24,6 @@ use crate::events::{Config, Event, Events};
 
 
 struct App {
-    x: f64,
-    y: f64,
     area: Rect,
     cell_grid: Grid
 }
@@ -50,8 +47,6 @@ impl App {
         grid1.update(seed);
 
         Self {
-            x: 0.0,
-            y: 0.0,
             area: Rect::new(10, 10, 100, 100), // x, y, width, height layout
             cell_grid: grid1
         }
@@ -63,8 +58,8 @@ impl App {
         // update the game of life here
         let mut delta: HashMap<(usize, usize), cell::CellState> = HashMap::new();
 
-        for i in 0..self.cell_grid.get_dimensions().0 {
-            for j in 0..self.cell_grid.get_dimensions().1 {
+        for i in 0..self.cell_grid.get_size().0 {
+            for j in 0..self.cell_grid.get_size().1 {
 
                 let neighbors = self.cell_grid.get_neighbors(&(i,j)).unwrap();
 
@@ -87,7 +82,6 @@ impl App {
                 }
 
                 // GAME OF LIFE
-                // fewer than 2 live neighbors
                 if alive < 2 {
 
                     if let Some(cell) = self.cell_grid.get_cell(&(i,j)) {
@@ -102,7 +96,7 @@ impl App {
 
                     }
 
-                } else if alive == 2 || alive == 3 { // 2 or 3 live neighbors
+                } else if alive == 2 || alive == 3 {
 
                     if let Some(cell) = self.cell_grid.get_cell(&(i,j)) {
 
@@ -119,7 +113,7 @@ impl App {
 
                     }
 
-                } else if alive > 3 { // greater than 3 live neighbors
+                } else if alive > 3 {
 
                     if let Some(cell) = self.cell_grid.get_cell(&(i,j)) {
 
@@ -155,7 +149,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // TODO
     // Setup event handlers
     let config = Config {
         tick_rate: Duration::from_millis(250),
@@ -177,9 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .block(Block::default().borders(Borders::ALL).title("Game of Life"))
                 .paint(|ctx| {
                     ctx.draw(&app.cell_grid);
-                })
-                .x_bounds([10.0, 10.0])
-                .y_bounds([10.0, 10.0]);
+                });
             f.render_widget(canvas, chunks[0]);
         })?;
 

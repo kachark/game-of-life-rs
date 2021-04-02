@@ -44,11 +44,13 @@ pub enum PositionDescription {
 }
 
 
+// 2D grid finite grid
 #[derive(Clone)]
 pub struct Grid {
     size: (usize, usize),
     state: HashMap<(usize, usize), cell::Cell>,
-    color: Color
+    color: Color,
+    dim: usize
 }
 
 impl Grid {
@@ -71,7 +73,8 @@ impl Grid {
         Self {
             size,
             state,
-            color: Color::Cyan
+            color: Color::Cyan,
+            dim: 2
         }
 
     }
@@ -115,7 +118,7 @@ impl Grid {
 
     }
 
-    pub fn get_dimensions(&self) -> &(usize, usize) {
+    pub fn get_size(&self) -> &(usize, usize) {
         &self.size
     }
 
@@ -130,6 +133,7 @@ impl Grid {
         // apply the search policy
         let search = self.search_policy(position);
 
+        // TODO unneccessary complexity
         for direction in search?.iter() {
             match direction {
                 GridDirection::Up{x, y} => {
@@ -218,7 +222,7 @@ impl Grid {
     pub fn search_policy(&self, position: &(usize, usize)) -> Result<Vec<GridDirection>, OutOfBoundsError> {
 
         let search: Vec<GridDirection>;
-        let mut dimensions = *self.get_dimensions();
+        let mut dimensions = *self.get_size();
         // dimensions copies the result from get_dimensions()
         dimensions.0 -= 1;
         dimensions.1 -= 1;
@@ -370,6 +374,7 @@ impl Grid {
 
 }
 
+// tui-rs integration
 impl Shape for Grid {
 
     fn draw(&self, painter: &mut Painter) {

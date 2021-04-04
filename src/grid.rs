@@ -377,12 +377,14 @@ impl Grid {
 impl Shape for Grid {
 
     fn draw(&self, painter: &mut Painter) {
+
         for (position, cell) in self.state.iter() {
             match cell.get_state() {
                 cell::CellState::Alive => painter.paint(position.0, position.1, self.color),
                 cell::CellState::Dead => continue
             }
         }
+
     }
 
 }

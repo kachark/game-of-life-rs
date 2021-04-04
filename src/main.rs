@@ -1,6 +1,6 @@
 #[allow(dead_code)]
 
-use std::{io, time::Duration, collections::HashMap};
+use std::{io, time::Duration};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,

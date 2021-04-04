@@ -18,11 +18,55 @@ impl GameOfLife {
         let mut default_grid = grid::Grid::new((grid_x, grid_y));
 
         let mut seed: HashMap<(usize,usize), cell::CellState> = HashMap::new();
-        seed.entry((3,3)).or_insert(cell::CellState::Alive);
-        seed.entry((3,2)).or_insert(cell::CellState::Alive);
-        seed.entry((3,1)).or_insert(cell::CellState::Alive);
-        seed.entry((2,3)).or_insert(cell::CellState::Alive);
-        seed.entry((1,2)).or_insert(cell::CellState::Alive);
+
+        // glider
+        // seed.entry((3,3)).or_insert(cell::CellState::Alive);
+        // seed.entry((3,2)).or_insert(cell::CellState::Alive);
+        // seed.entry((3,1)).or_insert(cell::CellState::Alive);
+        // seed.entry((2,3)).or_insert(cell::CellState::Alive);
+        // seed.entry((1,2)).or_insert(cell::CellState::Alive);
+
+        // Gosper glider gun
+        seed.entry((20,27)).or_insert(cell::CellState::Alive);
+        seed.entry((20,28)).or_insert(cell::CellState::Alive);
+        seed.entry((21,27)).or_insert(cell::CellState::Alive);
+        seed.entry((21,28)).or_insert(cell::CellState::Alive);
+
+        seed.entry((30,27)).or_insert(cell::CellState::Alive);
+        seed.entry((30,28)).or_insert(cell::CellState::Alive);
+        seed.entry((30,29)).or_insert(cell::CellState::Alive);
+        seed.entry((31,26)).or_insert(cell::CellState::Alive);
+        seed.entry((31,30)).or_insert(cell::CellState::Alive);
+        seed.entry((32,25)).or_insert(cell::CellState::Alive);
+        seed.entry((32,31)).or_insert(cell::CellState::Alive);
+        seed.entry((33,25)).or_insert(cell::CellState::Alive);
+        seed.entry((33,31)).or_insert(cell::CellState::Alive);
+        seed.entry((34,28)).or_insert(cell::CellState::Alive);
+        seed.entry((35,26)).or_insert(cell::CellState::Alive);
+        seed.entry((35,30)).or_insert(cell::CellState::Alive);
+        seed.entry((36,27)).or_insert(cell::CellState::Alive);
+        seed.entry((36,28)).or_insert(cell::CellState::Alive);
+        seed.entry((36,29)).or_insert(cell::CellState::Alive);
+        seed.entry((37,28)).or_insert(cell::CellState::Alive);
+
+        seed.entry((40,25)).or_insert(cell::CellState::Alive);
+        seed.entry((40,26)).or_insert(cell::CellState::Alive);
+        seed.entry((40,27)).or_insert(cell::CellState::Alive);
+        seed.entry((41,25)).or_insert(cell::CellState::Alive);
+        seed.entry((41,26)).or_insert(cell::CellState::Alive);
+        seed.entry((41,27)).or_insert(cell::CellState::Alive);
+        seed.entry((42,24)).or_insert(cell::CellState::Alive);
+        seed.entry((42,28)).or_insert(cell::CellState::Alive);
+        seed.entry((44,23)).or_insert(cell::CellState::Alive);
+        seed.entry((44,24)).or_insert(cell::CellState::Alive);
+        seed.entry((44,28)).or_insert(cell::CellState::Alive);
+        seed.entry((44,29)).or_insert(cell::CellState::Alive);
+
+        seed.entry((54,25)).or_insert(cell::CellState::Alive);
+        seed.entry((54,26)).or_insert(cell::CellState::Alive);
+        seed.entry((55,25)).or_insert(cell::CellState::Alive);
+        seed.entry((55,26)).or_insert(cell::CellState::Alive);
+
 
         default_grid.update(seed);
 
@@ -81,6 +125,10 @@ impl GameOfLife {
         self.cell_grid.update(delta);
         Ok(())
 
+    }
+
+    pub fn get_evolution(&self) -> u32 {
+        self.evolution
     }
 
     fn play(&self, living_neighbors: i32, current_position: &(usize, usize),  delta: &mut

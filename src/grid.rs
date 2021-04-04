@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::cell;
 use tui::{
     style::Color,
-    widgets::canvas::{Line, Painter, Shape},
+    widgets::canvas::{Painter, Shape},
 };
 
 #[derive(Debug, Clone)]
@@ -133,7 +133,6 @@ impl Grid {
         // apply the search policy
         let search = self.search_policy(position);
 
-        // TODO unneccessary complexity
         for direction in search?.iter() {
             match direction {
                 GridDirection::Up{x, y} => {

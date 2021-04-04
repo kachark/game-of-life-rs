@@ -4,36 +4,59 @@ use std::collections::HashMap;
 use crate::grid;
 use crate::cell;
 
-pub fn game_of_life() {
+pub struct GameOfLife {
+    evolution: u32,
+    pub cell_grid: grid::Grid
+}
 
-    let grid_x: usize = 10;
-    let grid_y: usize = 20;
-    let mut grid1 = grid::Grid::new((grid_x, grid_y));
+impl GameOfLife {
 
-    let mut seed: HashMap<(usize,usize), cell::CellState> = HashMap::new();
-    seed.entry((3,3)).or_insert(cell::CellState::Alive);
-    seed.entry((3,2)).or_insert(cell::CellState::Alive);
-    seed.entry((3,1)).or_insert(cell::CellState::Alive);
-    seed.entry((2,3)).or_insert(cell::CellState::Alive);
-    seed.entry((1,2)).or_insert(cell::CellState::Alive);
+    pub fn default() -> Self {
 
-    grid1.update(seed);
-    grid1.display();
+        let grid_x: usize = 100;
+        let grid_y: usize = 200;
+        let mut default_grid = grid::Grid::new((grid_x, grid_y));
 
-    // Update
-    for _ in 0..50 {
+        let mut seed: HashMap<(usize,usize), cell::CellState> = HashMap::new();
+        seed.entry((3,3)).or_insert(cell::CellState::Alive);
+        seed.entry((3,2)).or_insert(cell::CellState::Alive);
+        seed.entry((3,1)).or_insert(cell::CellState::Alive);
+        seed.entry((2,3)).or_insert(cell::CellState::Alive);
+        seed.entry((1,2)).or_insert(cell::CellState::Alive);
+
+        default_grid.update(seed);
+
+        Self {
+            evolution: 0,
+            cell_grid: default_grid,
+        }
+
+    }
+
+    pub fn update(&mut self) -> Result<(), grid::OutOfBoundsError> {
+
+        self.evolution += 1;
 
         let mut delta: HashMap<(usize, usize), cell::CellState> = HashMap::new();
 
-        for i in 0..grid1.get_size().0 {
-            for j in 0..grid1.get_size().1 {
+        // Traverse the grid
+        for i in 0..self.cell_grid.get_size().0 {
+            for j in 0..self.cell_grid.get_size().1 {
 
-                let neighbors = grid1.get_neighbors(&(i,j)).unwrap();
+                // Compute neighbors at (i, j)
+                let neighbors = self.cell_grid.get_neighbors(&(i,j));
+                let neighbors = match neighbors {
 
+                    Ok(positions) => positions,
+                    Err(error) => return Err(error)
+
+                };
+
+                // Count number of living neighbors
                 let mut alive = 0;
                 for indices in neighbors {
 
-                    if let Some(neighbor_cell) = grid1.get_cell(&indices) {
+                    if let Some(neighbor_cell) = self.cell_grid.get_cell(&indices) {
 
                         match neighbor_cell.get_state() {
                             cell::CellState::Alive => {
@@ -48,65 +71,73 @@ pub fn game_of_life() {
 
                 }
 
-                // GAME OF LIFE
-                // fewer than 2 live neighbors
-                if alive < 2 {
-
-                    if let Some(cell) = grid1.get_cell(&(i,j)) {
-
-                        // why isn't it coming here for 6,6?
-                        match cell.get_state() {
-                            cell::CellState::Alive => {
-                                delta.entry((i,j)).or_insert(cell::CellState::Dead);
-                            },
-                            cell::CellState::Dead => continue
-                        }
-
-                    }
-
-                } else if alive == 2 || alive == 3 { // 2 or 3 live neighbors
-
-                    if let Some(cell) = grid1.get_cell(&(i,j)) {
-
-                        match cell.get_state() {
-                            cell::CellState::Alive => continue,
-                            cell::CellState::Dead => {
-                                if alive == 3 {
-                                    delta.entry((i,j)).or_insert(cell::CellState::Alive);
-                                } else {
-                                    continue
-                                }
-                            }
-                        }
-
-                    }
-
-                } else if alive > 3 { // greater than 3 live neighbors
-
-                    if let Some(cell) = grid1.get_cell(&(i,j)) {
-
-                        match cell.get_state() {
-                            cell::CellState::Alive => {
-                                delta.entry((i,j)).or_insert(cell::CellState::Dead);
-                            },
-                            cell::CellState::Dead => continue
-                        }
-
-                    }
-
-                }
+                // Apply Game of Life rules and track changes to be made to the grid
+                self.play(alive, &(i,j), &mut delta);
 
             }
         }
 
-        // update the grid with the deltas
-        println!("{:?}", delta.keys());
-        grid1.update(delta);
-        println!("----------------------------");
-        grid1.display();
+        // Update grid with changes
+        self.cell_grid.update(delta);
+        Ok(())
 
     }
 
+    fn play(&self, living_neighbors: i32, current_position: &(usize, usize),  delta: &mut
+        HashMap<(usize, usize), cell::CellState>) {
+
+        // GAME OF LIFE
+        if living_neighbors < 2 {
+
+            if let Some(cell) = self.cell_grid.get_cell(current_position) {
+
+                match cell.get_state() {
+                    cell::CellState::Alive => {
+                        delta.entry(*current_position).or_insert(cell::CellState::Dead);
+                    },
+                    cell::CellState::Dead => ()
+                }
+
+            }
+
+        } else if living_neighbors == 2 || living_neighbors == 3 {
+
+            if let Some(cell) = self.cell_grid.get_cell(current_position) {
+
+                match cell.get_state() {
+                    cell::CellState::Alive => (),
+                    cell::CellState::Dead => {
+                        if living_neighbors == 3 {
+                            delta.entry(*current_position).or_insert(cell::CellState::Alive);
+                        }
+                    }
+                }
+
+            }
+
+        } else if living_neighbors > 3 {
+
+            if let Some(cell) = self.cell_grid.get_cell(current_position) {
+
+                match cell.get_state() {
+                    cell::CellState::Alive => {
+                        delta.entry(*current_position).or_insert(cell::CellState::Dead);
+                    },
+                    cell::CellState::Dead => ()
+                }
+
+            }
+
+        }
+
+    }
+
+    pub fn display(&self) {
+
+        println!("----------------------------");
+        self.cell_grid.display();
+
+    }
 
 }
 

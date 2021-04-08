@@ -32,7 +32,7 @@ impl App {
     fn new() -> Self {
 
         Self {
-            area: Rect::new(10, 10, 100, 100), // x, y, width, height layout
+            area: Rect::new(0, 0, 200, 200), // x, y, width, height layout
             game: GameOfLife::default()
         }
 
